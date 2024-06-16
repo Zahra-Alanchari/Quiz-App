@@ -7,6 +7,10 @@ import StartScreen from "./start";
 import Question from "./question";
 import NextButton from "./nextbtn";
 import Progress from "./progress";
+import Finish from "./finish";
+import Timer from "./timer";
+import Footer from "./footer";
+const sec = 30;
 
 const initialState = {
   questions: [],
@@ -14,6 +18,7 @@ const initialState = {
   index: 0,
   answer: null,
   points: 0,
+  secondRemain: null,
 };
 function reducer(state, action) {
   switch (action.type) {
@@ -29,7 +34,11 @@ function reducer(state, action) {
         status: "error",
       };
     case "start":
-      return { ...state, status: "active" };
+      return {
+        ...state,
+        status: "active",
+        secondRemain: state.questions.length * sec,
+      };
     case "newAnswer": {
       const question = state.questions[state.index];
 
@@ -49,6 +58,26 @@ function reducer(state, action) {
         index: state.index + 1,
         answer: null,
       };
+    case "finish":
+      return {
+        ...state,
+        status: "finished",
+      };
+    case "restart":
+      return {
+        ...state,
+        status: "ready",
+        index: 0,
+        answer: null,
+        points: 0,
+        secondRemain: null,
+      };
+    case "tick":
+      return {
+        ...state,
+        secondRemain: state.secondRemain - 1,
+        status: state.secondRemain === 0 ? "finished" : state.status,
+      };
     default:
       throw new Error("action not found");
   }
@@ -57,7 +86,7 @@ function reducer(state, action) {
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const numQuestion = state.questions.length;
-  const maxPoint = state.questions.reduce((prev, cur) => prev + cur.points, 0)
+  const maxPoint = state.questions.reduce((prev, cur) => prev + cur.points, 0);
 
   useEffect(function () {
     fetch("http://localhost:9000/questions")
@@ -77,16 +106,36 @@ export default function App() {
         )}
         {state.status === "active" && (
           <>
-            <Progress index={state.index +1 } numQ={numQuestion} points={state.points} maxPoint={maxPoint} answer={state.answer}/>
+            <Progress
+              index={state.index + 1}
+              numQ={numQuestion}
+              points={state.points}
+              maxPoint={maxPoint}
+              answer={state.answer}
+            />
             <Question
               dispatch={dispatch}
               answer={state.answer}
               question={state.questions[state.index]}
             />
-            <NextButton dispatch={dispatch} answer={state.answer} />
+            <Footer>
+              <Timer dispatch={dispatch} secondRemain={state.secondRemain} />
+              <NextButton
+                dispatch={dispatch}
+                answer={state.answer}
+                index={state.index}
+                numQ={numQuestion}
+              />
+            </Footer>
           </>
         )}
-        {status === 'finished' &&}
+        {state.status === "finished" && (
+          <Finish
+            points={state.points}
+            maxpoint={maxPoint}
+            dispatch={dispatch}
+          />
+        )}
       </Main>
     </div>
   );

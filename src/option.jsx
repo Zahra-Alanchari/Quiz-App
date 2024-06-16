@@ -3,7 +3,6 @@ export default function Option({ question, dispatch, answer }) {
   return (
     <div className="options">
       {question.options.map((options, index) => (
-
         <button
           className={`btn btn-option ${index === answer ? "answer" : ""} ${
             hasAnswer
@@ -12,14 +11,12 @@ export default function Option({ question, dispatch, answer }) {
                 : "wrong"
               : ""
           }`}
-          
           key={options}
           disabled={hasAnswer}
           onClick={() => dispatch({ type: "newAnswer", payload: index })}
         >
           {options}
         </button>
-        
       ))}
     </div>
   );
